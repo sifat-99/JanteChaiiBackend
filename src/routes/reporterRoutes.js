@@ -1,5 +1,4 @@
 import express from "express";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { ReporterModel } from "../models/Reporter.js";
 
@@ -13,18 +12,23 @@ export const reporterRouter = (connection) => {
   // -----------------------------
   router.post("/register", async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { email, password, profilePic } = req.body;
 
       const existingReporter = await Reporter.findOne({ email });
-      if (existingReporter) return res.status(400).json({ message: "Reporter already exists" });
-
-      const salt = await bcrypt.genSalt(parseInt(process.env.BCRYPT_SALT_ROUNDS));
-      const hashedPassword = await bcrypt.hash(password, salt);
+      if (existingReporter)
+        return res.status(400).json({ message: "Reporter already exists" });
 
       const reporterId = "REP" + Date.now();
-      const newReporter = await Reporter.create({ reporterId, email, password: hashedPassword });
+      const newReporter = await Reporter.create({
+        reporterId,
+        email,
+        password, // hash only in model
+        profilePic: profilePic || "",
+      });
 
-      res.status(201).json({ message: "Reporter created successfully", reporter: newReporter });
+      res
+        .status(201)
+        .json({ message: "Reporter created successfully", reporter: newReporter });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -39,9 +43,10 @@ export const reporterRouter = (connection) => {
       const { email, password } = req.body;
 
       const reporter = await Reporter.findOne({ email });
-      if (!reporter) return res.status(400).json({ message: "Invalid email or password" });
+      if (!reporter)
+        return res.status(400).json({ message: "Invalid email or password" });
 
-      const isMatch = await bcrypt.compare(password, reporter.password);
+      const isMatch = await reporter.comparePassword(password);
       if (!isMatch || reporter.role !== "reporter")
         return res.status(400).json({ message: "Invalid email or password" });
 
@@ -90,15 +95,13 @@ export const reporterRouter = (connection) => {
   // -----------------------------
   router.put("/:id", async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { email, password, profilePic } = req.body;
       const updateData = { email };
 
-      if (password) {
-        const salt = await bcrypt.genSalt(parseInt(process.env.BCRYPT_SALT_ROUNDS));
-        updateData.password = await bcrypt.hash(password, salt);
-      }
+      if (password) updateData.password = password; // hash will happen in model pre-save
+      if (profilePic) updateData.profilePic = profilePic;
 
-      const updatedReporter = await Reporter.findByIdAndUpdate(req.params.id, updateData, { new: true });
+      const updatedReporter = await Reporter.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
       if (!updatedReporter) return res.status(404).json({ message: "Reporter not found" });
 
       res.json({ message: "Reporter updated successfully", reporter: updatedReporter });

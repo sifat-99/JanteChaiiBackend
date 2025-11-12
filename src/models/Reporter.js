@@ -1,4 +1,3 @@
-// src/models/Reporter.js
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
@@ -7,7 +6,8 @@ const ReporterSchema = new mongoose.Schema({
   reporterId: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ["reporter"], default: "reporter" }, // auto role
+  role: { type: String, enum: ["reporter"], default: "reporter" },
+  profilePic: { type: String, default: "" }, // optional
   createdAt: { type: Date, default: Date.now },
 });
 

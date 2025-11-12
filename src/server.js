@@ -11,7 +11,7 @@ import morgan from "morgan";
 import { adminRouter } from "./routes/adminRoutes.js";
 import { userRouter } from "./routes/userRoutes.js";
 import { reporterRouter } from "./routes/reporterRoutes.js";
-
+import { categoryRouter } from "./routes/categoryRoutes.js";
 import { notFound, errorHandler } from "./middlewares/error.js";
 
 const PORT = process.env.PORT || 5000;
@@ -32,6 +32,7 @@ app.use("/uploads", express.static(path.join(path.resolve(), "uploads")));
 app.get("/", (req, res) => {
   res.send("✅ Multi-DB API server is running successfully!");
 });
+
 
 // -----------------------------
 // Connect multiple databases
@@ -59,10 +60,21 @@ const connectDB = async () => {
       console.log(`✅ Admins DB connected: ${process.env.DB_ADMIN_NAME}`)
     );
 
+    const newsConn = mongoose.createConnection(
+      `${process.env.MONGO_URI}/${process.env.DB_NEWS_NAME}`
+    );
+    newsConn.on("connected", () =>
+      console.log(`✅ News DB connected: ${process.env.DB_NEWS_NAME}`)
+    );
+
     // Routes
     app.use("/api/users", userRouter(userConn));
     app.use("/api/reporters", reporterRouter(reporterConn));
     app.use("/api/admins", adminRouter(adminConn));
+     app.use("/api/categories", categoryRouter(newsConn));
+
+    // TODO: later we can add newsRouter(newsConn)
+    // app.use("/api/news", newsRouter(newsConn));
 
     // Error handlers
     app.use(notFound);
@@ -77,5 +89,6 @@ const connectDB = async () => {
     process.exit(1);
   }
 };
+
 
 connectDB();

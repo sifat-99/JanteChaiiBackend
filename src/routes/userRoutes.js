@@ -13,16 +13,27 @@ export const userRouter = (connection) => {
   // -----------------------------
   router.post("/register", async (req, res) => {
     try {
-      const { name, email, password } = req.body;
+      const { name, email, password, profilePic } = req.body;
 
+      // ✅ Check existing user
       const existingUser = await User.findOne({ email });
-      if (existingUser) return res.status(400).json({ message: "User already exists" });
+      if (existingUser)
+        return res.status(400).json({ message: "User already exists" });
 
-      const salt = await bcrypt.genSalt(parseInt(process.env.BCRYPT_SALT_ROUNDS));
-      const hashedPassword = await bcrypt.hash(password, salt);
+      // ✅ Model নিজে pre-save hook দিয়ে hash করবে
+      const newUser = new User({ name, email, password, profilePic });
+      await newUser.save();
 
-      const newUser = await User.create({ name, email, password: hashedPassword });
-      res.status(201).json({ message: "User created successfully", user: newUser });
+      res.status(201).json({
+        message: "User created successfully",
+        user: {
+          id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          profilePic: newUser.profilePic,
+        },
+      });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -37,10 +48,13 @@ export const userRouter = (connection) => {
       const { email, password } = req.body;
 
       const user = await User.findOne({ email });
-      if (!user) return res.status(400).json({ message: "Invalid email or password" });
+      if (!user)
+        return res.status(400).json({ message: "Invalid email or password" });
 
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) return res.status(400).json({ message: "Invalid email or password" });
+      // ✅ comparePassword method use করা হচ্ছে
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch)
+        return res.status(400).json({ message: "Invalid email or password" });
 
       const token = jwt.sign(
         { id: user._id, email: user.email, role: user.role },
@@ -48,7 +62,17 @@ export const userRouter = (connection) => {
         { expiresIn: process.env.JWT_EXPIRES_IN }
       );
 
-      res.json({ message: "Login successful", token });
+      res.json({
+        message: "Login successful",
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          profilePic: user.profilePic,
+        },
+      });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -60,7 +84,7 @@ export const userRouter = (connection) => {
   // -----------------------------
   router.get("/", async (req, res) => {
     try {
-      const users = await User.find({});
+      const users = await User.find({}, "-password"); // password বাদ দেওয়া হলো
       res.json(users);
     } catch (err) {
       console.error(err);
@@ -73,7 +97,7 @@ export const userRouter = (connection) => {
   // -----------------------------
   router.get("/:id", async (req, res) => {
     try {
-      const user = await User.findById(req.params.id);
+      const user = await User.findById(req.params.id, "-password");
       if (!user) return res.status(404).json({ message: "User not found" });
       res.json(user);
     } catch (err) {
@@ -87,18 +111,30 @@ export const userRouter = (connection) => {
   // -----------------------------
   router.put("/:id", async (req, res) => {
     try {
-      const { name, email, password } = req.body;
-      const updateData = { name, email };
+      const { name, email, password, profilePic } = req.body;
+      const updateData = { name, email, profilePic };
 
-      if (password) {
-        const salt = await bcrypt.genSalt(parseInt(process.env.BCRYPT_SALT_ROUNDS));
-        updateData.password = await bcrypt.hash(password, salt);
-      }
+      // ✅ password থাকলে model pre-save hook এ hash করবে
+      if (password) updateData.password = password;
 
-      const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
-      if (!updatedUser) return res.status(404).json({ message: "User not found" });
+      const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, {
+        new: true,
+        runValidators: true,
+      });
 
-      res.json({ message: "User updated successfully", user: updatedUser });
+      if (!updatedUser)
+        return res.status(404).json({ message: "User not found" });
+
+      res.json({
+        message: "User updated successfully",
+        user: {
+          id: updatedUser._id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          profilePic: updatedUser.profilePic,
+        },
+      });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -111,7 +147,8 @@ export const userRouter = (connection) => {
   router.delete("/:id", async (req, res) => {
     try {
       const deletedUser = await User.findByIdAndDelete(req.params.id);
-      if (!deletedUser) return res.status(404).json({ message: "User not found" });
+      if (!deletedUser)
+        return res.status(404).json({ message: "User not found" });
       res.json({ message: "User deleted successfully" });
     } catch (err) {
       console.error(err);

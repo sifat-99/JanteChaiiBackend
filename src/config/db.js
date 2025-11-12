@@ -1,13 +1,14 @@
 // src/config/db.js
 import mongoose from "mongoose";
 
-// 🌟 Connections holder
+//  Connections holder
 let userConn;
 let reporterConn;
 let adminConn;
+let newsConn; // ✅ News DB holder
 
 /**
- * Connect to all databases (User, Reporter, Admin)
+ * Connect to all databases (User, Reporter, Admin, News)
  */
 export const connectDB = async () => {
   try {
@@ -32,7 +33,14 @@ export const connectDB = async () => {
     );
     console.log("✅ Admin DB connected");
 
-    return { userConn, reporterConn, adminConn };
+    // ✅ News Database
+    newsConn = await mongoose.createConnection(
+      `${process.env.MONGO_URI}/${process.env.DB_NEWS_NAME}`,
+      { useNewUrlParser: true, useUnifiedTopology: true }
+    );
+    console.log("✅ News DB connected");
+
+    return { userConn, reporterConn, adminConn, newsConn };
   } catch (err) {
     console.error("❌ DB connection failed:", err);
     throw err;
@@ -55,4 +63,10 @@ export const getReporterConn = () => {
 export const getAdminConn = () => {
   if (!adminConn) throw new Error("Admin DB not connected yet");
   return adminConn;
+};
+
+// ✅ Getter for News DB
+export const getNewsConn = () => {
+  if (!newsConn) throw new Error("News DB not connected yet");
+  return newsConn;
 };
