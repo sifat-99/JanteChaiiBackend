@@ -3,7 +3,7 @@
     "name": "jantechaii-backend",
     "builds": [
         {
-            "src": "src/server.js",
+            "src": "./src/server.js",
             "use": "@vercel/node"
         }
     ],
