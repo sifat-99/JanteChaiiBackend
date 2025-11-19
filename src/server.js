@@ -33,63 +33,63 @@ app.use("/uploads", express.static(path.join(path.resolve(), "uploads")));
 // Test Route
 // -----------------------------
 app.get("/", (req, res) => {
-  res.send("✅ Multi-DB API server is running successfully!");
+    res.send("✅ Multi-DB API server is running successfully!");
 });
 
 // -----------------------------
 // Connect multiple databases
 // -----------------------------
 const connectDB = async () => {
-  try {
-    const userConn = mongoose.createConnection(
-      `${process.env.MONGO_URI}/${process.env.DB_USER_NAME}`
-    );
-    userConn.on("connected", () =>
-      console.log(`✅ Users DB connected: ${process.env.DB_USER_NAME}`)
-    );
+    try {
+        const userConn = mongoose.createConnection(
+            `${process.env.MONGO_URI}/${process.env.DB_USER_NAME}`
+        );
+        userConn.on("connected", () =>
+            console.log(`✅ Users DB connected: ${process.env.DB_USER_NAME}`)
+        );
 
-    const reporterConn = mongoose.createConnection(
-      `${process.env.MONGO_URI}/${process.env.DB_REPORTER_NAME}`
-    );
-    reporterConn.on("connected", () =>
-      console.log(`✅ Reporters DB connected: ${process.env.DB_REPORTER_NAME}`)
-    );
+        const reporterConn = mongoose.createConnection(
+            `${process.env.MONGO_URI}/${process.env.DB_REPORTER_NAME}`
+        );
+        reporterConn.on("connected", () =>
+            console.log(`✅ Reporters DB connected: ${process.env.DB_REPORTER_NAME}`)
+        );
 
-    const adminConn = mongoose.createConnection(
-      `${process.env.MONGO_URI}/${process.env.DB_ADMIN_NAME}`
-    );
-    adminConn.on("connected", () =>
-      console.log(`✅ Admins DB connected: ${process.env.DB_ADMIN_NAME}`)
-    );
+        const adminConn = mongoose.createConnection(
+            `${process.env.MONGO_URI}/${process.env.DB_ADMIN_NAME}`
+        );
+        adminConn.on("connected", () =>
+            console.log(`✅ Admins DB connected: ${process.env.DB_ADMIN_NAME}`)
+        );
 
-    const newsConn = mongoose.createConnection(
-      `${process.env.MONGO_URI}/newscon`
-    );
-    newsConn.on("connected", () =>
-      console.log(`✅ News DB connected: newscon`)
-    );
+        const newsConn = mongoose.createConnection(
+            `${process.env.MONGO_URI}/newscon`
+        );
+        newsConn.on("connected", () =>
+            console.log(`✅ News DB connected: newscon`)
+        );
 
-    // -----------------------------
-    // Routes
-    // -----------------------------
-    app.use("/api/users", userRouter(userConn));
-    app.use("/api/reporters", reporterRouter(reporterConn));
-    app.use("/api/admins", adminRouter(adminConn));
-    app.use("/api/categories", categoryRouter(newsConn));
-    app.use("/api/news", newsRouter(newsConn)); 
+        // -----------------------------
+        // Routes
+        // -----------------------------
+        app.use("/api/users", userRouter(userConn));
+        app.use("/api/reporters", reporterRouter(reporterConn));
+        app.use("/api/admins", adminRouter(adminConn));
+        app.use("/api/categories", categoryRouter(newsConn));
+        app.use("/api/news", newsRouter(newsConn));
 
-    // Error handlers
-    app.use(notFound);
-    app.use(errorHandler);
+        // Error handlers
+        app.use(notFound);
+        app.use(errorHandler);
 
-    // Start server
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-    });
-  } catch (err) {
-    console.error("❌ Database connection failed:", err);
-    process.exit(1);
-  }
+        // Start server
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on http://localhost:${PORT}`);
+        });
+    } catch (err) {
+        console.error("❌ Database connection failed:", err);
+        process.exit(1);
+    }
 };
 
 connectDB();
