@@ -57,6 +57,8 @@ export const reporterRouter = (connection) => {
                 { expiresIn: process.env.JWT_EXPIRES_IN }
             );
 
+
+
             res.json({ message: "Login successful", token });
         } catch (err) {
             console.error(err);
