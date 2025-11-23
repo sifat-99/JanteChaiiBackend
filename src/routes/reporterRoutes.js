@@ -101,8 +101,8 @@ export const reporterRouter = (connection) => {
     // -----------------------------
     router.put("/:id", async (req, res) => {
         try {
-            const { email, password, profilePic, name } = req.body;
-            const updateData = { email };
+            const { email, password, profilePic, name, status } = req.body;
+            const updateData = { email, status, profilePic, name };
 
             if (password) updateData.password = password; // hash will happen in model pre-save
             if (profilePic) updateData.profilePic = profilePic;
