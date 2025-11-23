@@ -57,7 +57,7 @@ export const userRouter = (connection) => {
                 return res.status(400).json({ message: "Invalid email or password" });
 
             const token = jwt.sign(
-                { id: user._id, email: user.email, role: user.role },
+                { id: user._id, email: user.email, role: user.role, profilePic: user.profilePic, name: user.name },
                 process.env.JWT_SECRET,
                 { expiresIn: process.env.JWT_EXPIRES_IN }
             );

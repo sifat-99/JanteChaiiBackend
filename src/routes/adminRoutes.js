@@ -16,13 +16,13 @@ export const adminRouter = (connection) => {
 
     router.post("/register", async (req, res) => {
         try {
-            const { email, password, profilePic } = req.body;
+            const { email, password, profilePic, name } = req.body;
             const existingAdmin = await Admin.findOne({ email });
             if (existingAdmin) return res.status(400).json({ message: "Admin already exists" });
 
             const adminId = "ADMIN" + Date.now();
             // শুধু plain password পাঠাও, model pre-save hook হ্যাশ করবে
-            const newAdmin = await Admin.create({ adminId, email, password, profilePic: profilePic || "" });
+            const newAdmin = await Admin.create({ adminId, email, password, profilePic: profilePic || "", name: name || "" });
 
             res.status(201).json({ message: "Admin created successfully", admin: newAdmin });
         } catch (err) {
@@ -49,7 +49,7 @@ export const adminRouter = (connection) => {
                 return res.status(400).json({ message: "Invalid email or password" });
 
             const token = jwt.sign(
-                { id: admin._id, email: admin.email, role: admin.role },
+                { id: admin._id, email: admin.email, role: admin.role, profilePic: admin.profilePic, name: admin.name },
                 process.env.JWT_SECRET,
                 { expiresIn: process.env.JWT_EXPIRES_IN }
             );
@@ -58,11 +58,11 @@ export const adminRouter = (connection) => {
                 message: "Login successful",
                 token,
                 user: {
-                    id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    profilePic: user.profilePic,
+                    id: admin._id,
+                    name: admin.name,
+                    email: admin.email,
+                    role: admin.role,
+                    profilePic: admin.profilePic,
                 },
             });
         } catch (err) {
