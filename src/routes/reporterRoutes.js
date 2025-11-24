@@ -52,7 +52,7 @@ export const reporterRouter = (connection) => {
                 return res.status(400).json({ message: "Invalid email or password" });
 
             const token = jwt.sign(
-                { id: reporter._id, email: reporter.email, reporterId: reporter.reporterId, role: reporter.role, profilePic: reporter.profilePic, name: reporter.name },
+                { id: reporter._id, email: reporter.email, reporterId: reporter.reporterId, role: reporter.role, profilePic: reporter.profilePic, name: reporter.name, status: reporter.status },
                 process.env.JWT_SECRET,
                 { expiresIn: process.env.JWT_EXPIRES_IN }
             );
